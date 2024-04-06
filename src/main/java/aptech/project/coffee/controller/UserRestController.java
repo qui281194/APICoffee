@@ -11,6 +11,7 @@ import aptech.project.coffee.models.User;
 
 import aptech.project.coffee.service.UsersService;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -87,7 +88,7 @@ public class UserRestController {
         }
     }
 
-     @PutMapping("/edit/{id}")
+    @PutMapping("/edit/{id}")
     public ResponseEntity<UserDto> updateBlog(@PathVariable Integer id, @RequestBody UserDto updatedBlog) {
         UserDto updated = usersService.updateUser(updatedBlog);
         if (updated != null) {
@@ -134,16 +135,37 @@ public class UserRestController {
             return ResponseEntity.notFound().build();
         }
     }
-    
+
     @PostMapping("/check-email")
-public ResponseEntity<Void> checkEmailExists(@RequestBody String email) {
-    boolean emailExists = usersService.existsByEmail(email);
-    if (emailExists) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).build(); // Email đã tồn tại, trả về CONFLICT
-    } else {
-        return ResponseEntity.ok().build(); // Email chưa tồn tại, trả về OK
+    public ResponseEntity<Void> checkEmailExists(@RequestBody String email) {
+        boolean emailExists = usersService.existsByEmail(email);
+        if (emailExists) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build(); // Email đã tồn tại, trả về CONFLICT
+        } else {
+            return ResponseEntity.ok().build(); // Email chưa tồn tại, trả về OK
+        }
     }
+
+  @GetMapping("/search")
+public PageDto<UserDto> searchByUsername(
+        @RequestParam("username") String username,
+        @RequestParam(defaultValue = "1") Integer pageNo
+) {
+    // Tìm kiếm người dùng theo username từ service
+    Page<UserDto> userPage = usersService.searchByUsername(username, pageNo);
+
+    // Tạo PageDto để đóng gói kết quả trả về
+    PageDto<UserDto> pageDto = new PageDto<>();
+    pageDto.setContent(userPage.getContent()); // Set nội dung của trang
+    pageDto.setTotalPages(userPage.getTotalPages()); // Set tổng số trang
+    pageDto.setTotalElements(userPage.getTotalElements()); // Set tổng số phần tử
+
+    return pageDto;
 }
+
+
+
+
 
 
 }

@@ -206,5 +206,25 @@ public class UsersService {
     }
     return null;
 }
+    
+     public UserDto findByUsername(String username) {
+        Optional<User> optionalUser = userRepository.searchByUsername(username);
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            return mapToDto(user);
+        }
+        return null;
+    }
+       public Page<UserDto> searchByUsername(String username, Integer pageNo) {
+        // Định nghĩa số lượng phần tử trên mỗi trang
+        int pageSize = 30; // ví dụ
 
+        // Thực hiện tìm kiếm theo username và phân trang
+        Page<User> userPage = userRepository.findByUsernameContainingIgnoreCase(username, PageRequest.of(pageNo - 1, pageSize));
+
+        // Chuyển đổi Page<User> thành Page<UserDto> và trả về
+        return userPage.map(this::mapToDto);
+    }
+
+    
 }
