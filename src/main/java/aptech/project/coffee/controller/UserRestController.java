@@ -11,6 +11,7 @@ import aptech.project.coffee.models.User;
 
 import aptech.project.coffee.service.UsersService;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -162,6 +163,13 @@ public PageDto<UserDto> searchByUsername(
 
     return pageDto;
 }
+
+@PostMapping("/change-password")
+public ResponseEntity<String> changePassword(@RequestBody Map<String, String> requestMap) {
+    ResponseEntity<String> responseEntity = usersService.changePassword(requestMap);
+    return responseEntity;
+}
+
 
 
 

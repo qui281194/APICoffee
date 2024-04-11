@@ -13,6 +13,7 @@ import aptech.project.coffee.repository.RoleRepository;
 import aptech.project.coffee.repository.UserRepository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import java.util.stream.Collectors;
@@ -20,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import org.springframework.stereotype.Service;
@@ -225,6 +228,44 @@ public class UsersService {
         // Chuyển đổi Page<User> thành Page<UserDto> và trả về
         return userPage.map(this::mapToDto);
     }
+       
+       public ResponseEntity<String> changePassword(Map<String, String> requestMap) {
+        // Kiểm tra xem map chứa thông tin cần thiết hay không
+        if (requestMap.containsKey("email") && requestMap.containsKey("oldPassword") && requestMap.containsKey("newPassword")) {
+            // Lấy thông tin từ map
+            String email = requestMap.get("email");
+            String oldPassword = requestMap.get("oldPassword");
+            String newPassword = requestMap.get("newPassword");
+
+            // Tìm người dùng theo email
+            Optional<User> optionalUser = userRepository.findByEmail(email);
+            if (optionalUser.isPresent()) {
+                User user = optionalUser.get();
+                BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+                // Kiểm tra mật khẩu cũ có khớp không
+                if (passwordEncoder.matches(oldPassword, user.getPassword())) {
+                    // Mã hóa mật khẩu mới
+                    String encodedNewPassword = passwordEncoder.encode(newPassword);
+                    // Cập nhật mật khẩu mới cho người dùng
+                    user.setPassword(encodedNewPassword);
+                    userRepository.save(user);
+                    // Trả về thông báo thành công
+                    return ResponseEntity.ok("Password changed successfully!");
+                } else {
+                    // Trả về thông báo lỗi nếu mật khẩu cũ không khớp
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Incorrect old password!");
+                }
+            } else {
+                // Trả về thông báo lỗi nếu không tìm thấy người dùng
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found!");
+            }
+        } else {
+            // Trả về thông báo lỗi nếu thiếu thông tin cần thiết
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing required information!");
+        }
+    }
+          
 
     
 }
